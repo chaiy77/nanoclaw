@@ -3,32 +3,21 @@
 
 FROM node:22-slim
 
-# Install system dependencies for Chromium
-RUN apt-get update && apt-get install -y \
-    chromium \
-    fonts-liberation \
-    fonts-noto-cjk \
-    fonts-noto-color-emoji \
-    libgbm1 \
-    libnss3 \
-    libatk-bridge2.0-0 \
-    libgtk-3-0 \
-    libx11-xcb1 \
-    libxcomposite1 \
-    libxdamage1 \
-    libxrandr2 \
-    libasound2 \
-    libpangocairo-1.0-0 \
-    libcups2 \
-    libdrm2 \
-    libxshmfence1 \
-    curl \
-    git \
-    && rm -rf /var/lib/apt/lists/*
+# Copy bundled git binary and git-core executables (Debian apt repos blocked in build env)
+COPY bin/git /usr/bin/git
+COPY git-core/ /usr/lib/git-core/
+RUN chmod +x /usr/bin/git /usr/lib/git-core/*
 
-# Set Chromium path for agent-browser
+# Bundle proxy CA certificates (egress gateway certs for npm/node HTTPS)
+COPY certs/ /usr/local/share/ca-certificates/
+RUN for f in /usr/local/share/ca-certificates/*.crt; do cat "$f"; printf '\n'; done > /usr/local/share/ca-certificates/combined-proxy-ca.pem
+
+# Set Chromium path for agent-browser (Chromium not installed in this env)
 ENV AGENT_BROWSER_EXECUTABLE_PATH=/usr/bin/chromium
 ENV PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/usr/bin/chromium
+
+# Configure Node.js/npm to trust the proxy CA certificates
+ENV NODE_EXTRA_CA_CERTS=/usr/local/share/ca-certificates/combined-proxy-ca.pem
 
 # Install agent-browser and claude-code globally
 RUN npm install -g agent-browser @anthropic-ai/claude-code
