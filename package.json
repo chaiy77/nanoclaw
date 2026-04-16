@@ -25,6 +25,7 @@
     "@slack/types": "^2.15.0",
     "better-sqlite3": "11.10.0",
     "cron-parser": "5.5.0",
+    "discord.js": "^14.18.0",
     "grammy": "^1.39.3"
   },
   "devDependencies": {
