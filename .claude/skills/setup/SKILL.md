@@ -216,28 +216,7 @@ Ask them to let you know when done.
 
 ### 4b. Apple Container → Native Credential Proxy
 
-Apple Container is not compatible with OneCLI. The credential proxy code is already included in the apple-container branch — do NOT invoke `/use-native-credential-proxy` (it would conflict with already-applied code).
-
-Instead, just configure the credentials in `.env`:
-
-AskUserQuestion: Do you want to use your **Claude subscription** (Pro/Max) or an **Anthropic API key**?
-
-1. **Claude subscription (Pro/Max)** — description: "Uses your existing Claude Pro or Max subscription. Run `claude setup-token` in another terminal to get your token."
-2. **Anthropic API key** — description: "Pay-per-use API key from console.anthropic.com."
-
-For subscription: tell the user to run `claude setup-token` in another terminal. Stop and wait for the user to confirm they have completed this step successfully before proceeding.
-
-Once confirmed, add the token to `.env`:
-```bash
-echo 'CLAUDE_CODE_OAUTH_TOKEN=<their-token>' >> .env
-```
-
-For API key: add to `.env`:
-```bash
-echo 'ANTHROPIC_API_KEY=<their-key>' >> .env
-```
-
-Verify the proxy starts: `npm run dev` should show "Credential proxy listening" in the logs.
+Apple Container is not compatible with OneCLI. Invoke `/use-native-credential-proxy` to set up the built-in credential proxy instead. That skill handles credential collection, `.env` configuration, and verification.
 
 ## 5. Set Up Channels
 
@@ -324,7 +303,7 @@ Tell user to test: send a message in their registered chat. Show: `tail -f logs/
 
 ## Troubleshooting
 
-**Service not starting:** Check `logs/nanoclaw.error.log`. Common: wrong Node path (re-run step 7), credential system not running (Docker: check `curl ${ONECLI_URL}/api/health`; Apple Container: check `.env` credentials), missing channel credentials (re-invoke channel skill).
+**Service not starting:** Check `logs/nanoclaw.error.log`. Common: wrong Node path (re-run step 7), credential system not running (check `.env` credentials and `curl http://localhost:3001/health`), missing channel credentials (re-invoke channel skill).
 
 **Container agent fails ("Claude Code process exited with code 1"):** Ensure the container runtime is running — `open -a Docker` (macOS Docker), `container system start` (Apple Container), or `sudo systemctl start docker` (Linux). Check container logs in `groups/main/logs/container-*.log`.
 
