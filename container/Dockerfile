@@ -3,21 +3,15 @@
 
 FROM node:22-slim
 
-# Copy bundled git binary and git-core executables (Debian apt repos blocked in build env)
-COPY bin/git /usr/bin/git
-COPY git-core/ /usr/lib/git-core/
-RUN chmod +x /usr/bin/git /usr/lib/git-core/*
+# Install git (required by Claude Code for session management)
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    git \
+    ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
 
-# Bundle proxy CA certificates (egress gateway certs for npm/node HTTPS)
-COPY certs/ /usr/local/share/ca-certificates/
-RUN for f in /usr/local/share/ca-certificates/*.crt; do cat "$f"; printf '\n'; done > /usr/local/share/ca-certificates/combined-proxy-ca.pem
-
-# Set Chromium path for agent-browser (Chromium not installed in this env)
+# Set Chromium path for agent-browser (optional browser automation)
 ENV AGENT_BROWSER_EXECUTABLE_PATH=/usr/bin/chromium
 ENV PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/usr/bin/chromium
-
-# Configure Node.js/npm to trust the proxy CA certificates
-ENV NODE_EXTRA_CA_CERTS=/usr/local/share/ca-certificates/combined-proxy-ca.pem
 
 # Install agent-browser and claude-code globally
 RUN npm install -g agent-browser @anthropic-ai/claude-code
